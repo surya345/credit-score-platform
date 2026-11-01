@@ -1,0 +1,2 @@
+CREATE TABLE credit_reports(id VARCHAR(255) PRIMARY KEY,score_id VARCHAR(255) NOT NULL UNIQUE,event_id VARCHAR(255) NOT NULL UNIQUE,customer_id VARCHAR(255) NOT NULL,source_version BIGINT NOT NULL,generated_at TIMESTAMP(6) NOT NULL,result_json LONGTEXT NOT NULL);
+CREATE INDEX idx_reports_customer ON credit_reports(customer_id,source_version);

@@ -1,0 +1,85 @@
+@if (!signedIn) {
+  <main class="welcome"><div class="brand"><span class="brand-mark">C</span> CreditLens</div>
+    <div class="eyebrow">THE CREDIT ANALYSIS WORKSPACE</div><h1>A clearer view<br>of every profile.</h1>
+    <p>Review customer financials, understand the factors behind a score, and keep a clear record of every analysis.</p>
+    <button class="primary" (click)="login()">Sign in to workspace <span aria-hidden="true">↗</span></button>
+    <div class="demo-login"><strong>Explore the local demo</strong><span>Officer: <code>officer</code> / <code>Officer123!</code></span><span>Administrator: <code>admin</code> / <code>Admin123!</code></span></div>
+    <footer>Educational portfolio project · Scores are illustrative and are not lending recommendations.</footer>
+  </main>
+} @else {
+  <header class="topbar"><a class="brand" href="/"><span class="brand-mark">C</span> CreditLens <span class="workspace-label">WORKSPACE</span></a>
+    <div class="account"><span class="status-dot"></span><span>{{ username }} <small>{{ admin ? 'Administrator' : 'Credit officer' }}</small></span><button class="quiet" (click)="logout()">Sign out</button></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar"><div class="aside-heading"><h2>Customers</h2><span class="count">{{ total() }}</span></div>
+      <form class="search" (ngSubmit)="loadCustomers()"><label class="sr-only" for="search">Search customers</label><input id="search" name="search" [(ngModel)]="search" placeholder="Search name or reference"><button aria-label="Search">⌕</button></form>
+      <button class="new-customer" (click)="showNew.set(true)">+ New customer</button>
+      <nav class="customer-list" aria-label="Customers">
+        @for(c of customers(); track c.id) { <button class="customer" [class.active]="selected()?.id === c.id" (click)="select(c)"><span class="avatar">{{ initials(c.fullName) }}</span><span>{{ c.fullName }}<small>{{ c.reference }} · {{ c.currency }}</small></span><span class="chevron">›</span></button> }
+        @if(!customers().length && !loading()) { <p class="muted empty-small">No matching customers.</p> }
+      </nav>
+      <div class="pager"><button class="quiet" [disabled]="page() === 0" (click)="loadCustomers(page()-1)">Previous</button><span>{{ page()+1 }}</span><button class="quiet" [disabled]="(page()+1)*10 >= total()" (click)="loadCustomers(page()+1)">Next</button></div>
+      <div class="sidebar-note"><span class="eyebrow">A TRACEABLE PROCESS</span><p>Every submission becomes an immutable score and report.</p><span>Demo workspace · v1.0</span></div>
+    </aside>
+    <main class="main">
+      <div class="page-heading"><div><div class="eyebrow">CUSTOMER INTELLIGENCE</div><h1>Credit analysis</h1><p class="muted">From financial details to an explainable score.</p></div><span class="demo-badge">EDUCATIONAL DEMO</span></div>
+      @if(error()) { <div class="alert error" role="alert">{{ error() }}<button class="quiet" (click)="error.set('')" aria-label="Dismiss error">×</button></div> }
+      @if(notice()) { <div class="alert notice" role="status">{{ notice() }}</div> }
+      @if(selected(); as c) {
+        <section class="profile"><span class="avatar large">{{ initials(c.fullName) }}</span><div><h2>{{ c.fullName }}</h2><p>{{ c.reference }} <span>·</span> {{ c.email }}</p></div><span class="pill">{{ c.status }}</span><div class="profile-currency"><small>PROFILE CURRENCY</small><strong>{{ c.currency }}</strong></div></section>
+        <nav class="tabs" aria-label="Analysis sections">@for(t of tabs; track t){<button [class.selected]="tab() === t" [attr.aria-current]="tab() === t ? 'page' : null" (click)="changeTab(t)">{{ t }}@if(t === 'Reports' && reportTotal()){<span>{{ reportTotal() }}</span>}</button>}</nav>
+        @if(tab() === 'Overview') {
+          @if(latest(); as s) {
+            <div class="overview-grid"><section class="card score-card"><div class="card-heading"><h3>Credit score</h3><span class="pill" [class.warn]="s.result.riskBand !== 'LOW'">{{ s.result.riskBand }} RISK</span></div>
+              <div class="score-number">{{ s.result.score }}<span>/ 850</span></div><div class="score-track"><span [style.width.%]="(s.result.score-300)/550*100"></span></div><div class="scale"><span>300</span><span>850</span></div>
+              <p class="muted">Calculated {{ s.calculatedAt | date:'medium' }}</p><div class="score-footer">Base score <strong>300</strong><span>+</span> Factor points <strong>{{ s.result.score-300 }}</strong></div>
+            </section><section class="card factors"><div class="card-heading"><h3>What shapes this score</h3><span class="muted">Points earned</span></div>
+              @for(f of factors(); track f.name){<div class="factor"><div><span>{{ f.name }}</span><strong>{{ f.value }} <small>/ {{ f.max }}</small></strong></div><div class="factor-track"><span [style.width.%]="f.value/f.max*100"></span></div></div>}
+            </section></div>
+            <section class="card observations"><div><div class="eyebrow">MODEL OBSERVATIONS</div><h3>A little more context</h3></div><ul>@for(o of s.result.observations; track o){<li>{{ o }}</li>}</ul></section>
+            <div class="section-actions"><p class="muted">Model {{ s.result.algorithmVersion }} · Submission {{ s.sourceVersion }}</p><button class="secondary" (click)="refreshResults()">Refresh results</button><button class="primary" (click)="changeTab('Financial data')">New analysis</button></div>
+          } @else {
+            <section class="card empty-state"><div class="empty-symbol">↗</div><h2>A fresh starting point</h2><p>Add this customer’s financial details to generate an explainable score and a downloadable report.</p><button class="primary" (click)="changeTab('Financial data')">Add financial data</button><button class="quiet" (click)="refreshResults()">Refresh results</button></section>
+          }
+        }
+        @if(tab() === 'Financial data') {
+          <section class="card"><div class="card-heading"><div><h3>Financial snapshot</h3><p class="muted">Use amounts in {{ c.currency }}. Each submission creates a new analysis.</p></div><button class="quiet" (click)="useSample()" [disabled]="pending()">Use sample values</button></div>
+            <form #financial="ngForm" (ngSubmit)="submit()"><fieldset [disabled]="submitting() || pending()"><div class="form-grid">
+              <label>Monthly income ({{ c.currency }})<input type="number" name="monthlyIncome" [(ngModel)]="input.monthlyIncome" required min="0.01" max="999999999.99" step="0.01"><small>Monthly income before debt payments</small></label>
+              <label>Monthly debt payments ({{ c.currency }})<input type="number" name="monthlyDebtPayments" [(ngModel)]="input.monthlyDebtPayments" required min="0" max="999999999.99" step="0.01"><small>Total recurring debt repayments</small></label>
+              <label>Credit utilization (%)<input type="number" name="creditUtilizationPercent" [(ngModel)]="input.creditUtilizationPercent" required min="0" max="100" step="0.01"><small>Credit used as a percentage of available credit</small></label>
+              <label>Missed payments in 12 months<input type="number" name="missedPaymentsLast12Months" [(ngModel)]="input.missedPaymentsLast12Months" required min="0" max="100" step="1"><small>Number of missed scheduled payments</small></label>
+              <label>Credit history (months)<input type="number" name="creditHistoryMonths" [(ngModel)]="input.creditHistoryMonths" required min="0" max="960" step="1"><small>Time since the first credit account opened</small></label>
+              <label>Recent credit inquiries<input type="number" name="recentCreditInquiries" [(ngModel)]="input.recentCreditInquiries" required min="0" max="100" step="1"><small>Number of inquiries in the review period</small></label>
+            </div></fieldset><div class="form-footer"><p class="muted">The score and report appear after processing.</p><button class="primary" [disabled]="financial.invalid || submitting() || pending()">{{ submitting() ? 'Saving…' : pending() ? 'Processing…' : 'Save & analyze' }}</button></div></form>
+          </section>
+        }
+        @if(tab() === 'History') {
+          <section class="card"><div class="card-heading"><h3>Analysis history</h3><span class="muted">{{ historyTotal() }} saved analyses</span></div><div class="table-scroll"><table><thead><tr><th>Calculated</th><th>Submission</th><th>Score</th><th>Risk band</th><th>Model</th></tr></thead><tbody>@for(s of history();track s.id){<tr><td>{{ s.calculatedAt | date:'medium' }}</td><td>{{ s.sourceVersion }}</td><td><strong>{{ s.result.score }}</strong> / 850</td><td><span class="pill">{{ s.result.riskBand }}</span></td><td>{{ s.result.algorithmVersion }}</td></tr>}</tbody></table></div>@if(!history().length){<p class="empty-small muted">No analyses yet. Submit financial data to get started.</p>}<div class="pager"><button class="quiet" [disabled]="historyPage()===0" (click)="historyNext(historyPage()-1)">Previous</button><span>{{ historyPage()+1 }}</span><button class="quiet" [disabled]="(historyPage()+1)*20>=historyTotal()" (click)="historyNext(historyPage()+1)">Next</button></div></section>
+        }
+        @if(tab() === 'Reports') {
+          <section class="card"><div class="card-heading"><div><h3>Customer reports</h3><p class="muted">A permanent snapshot of each completed analysis.</p></div><button class="quiet" (click)="refreshResults()">Refresh</button></div>
+            @for(r of reports();track r.id){<article class="report-row"><div class="report-icon">PDF</div><div class="report-title"><h4>Credit analysis · {{ r.result.score }} / 850</h4><p class="muted">{{ r.generatedAt | date:'medium' }} · Submission {{ r.sourceVersion }}</p></div><button class="secondary" (click)="download(r)">Download PDF</button><button class="quiet" (click)="email(r)">Email summary</button></article>}
+            @if(!reports().length){<p class="empty-small muted">Reports will appear when analysis is complete.</p>}
+            <div class="pager"><button class="quiet" [disabled]="reportPage()===0" (click)="reportsNext(reportPage()-1)">Previous</button><span>{{ reportPage()+1 }}</span><button class="quiet" [disabled]="(reportPage()+1)*20>=reportTotal()" (click)="reportsNext(reportPage()+1)">Next</button></div>
+          </section><p class="muted footnote">In this local demo, email summaries are captured in <a href="http://localhost:8025" target="_blank" rel="noopener">Mailpit</a>.</p>
+        }
+        @if(tab() === 'Audit' && admin){
+          <section class="card"><div class="card-heading"><h3>Activity audit</h3><label>Service <select [(ngModel)]="auditService" (ngModelChange)="loadAudit()"><option value="users">Customers</option><option value="data">Financial data</option><option value="scores">Scoring</option><option value="reports">Reports</option></select></label></div><div class="table-scroll"><table><thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>Resource</th></tr></thead><tbody>@for(a of audit();track a.id){<tr><td>{{ a.occurredAt | date:'medium' }}</td><td>{{ a.action }}</td><td class="mono">{{ a.actorId }}</td><td class="mono">{{ a.resourceId }}</td></tr>}</tbody></table></div><div class="pager"><button class="quiet" [disabled]="auditPage()===0" (click)="loadAudit(auditPage()-1)">Previous</button><span>{{ auditPage()+1 }}</span><button class="quiet" [disabled]="(auditPage()+1)*20>=auditTotal()" (click)="loadAudit(auditPage()+1)">Next</button></div></section>
+        }
+      } @else { <section class="card empty-state"><h2>Your workspace starts here</h2><p>Create a customer profile to begin.</p><button class="primary" (click)="showNew.set(true)">New customer</button></section> }
+      <footer class="disclaimer">Educational model only. This is not a credit bureau score or a lending recommendation. Use synthetic customer data.</footer>
+    </main>
+  </div>
+  @if(showNew()) {
+    <div class="modal-backdrop"><section class="modal card" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="card-heading"><h2 id="modal-title">New customer</h2><button class="quiet" (click)="showNew.set(false)" aria-label="Close">×</button></div>
+      @if(error()){<p class="error alert" role="alert">{{ error() }}</p>}
+      <form #customerForm="ngForm" (ngSubmit)="createCustomer()"><div class="form-grid single">
+        <label>Full name<input name="fullName" [(ngModel)]="draft.fullName" required maxlength="120" autofocus></label>
+        <label>Customer reference<input name="reference" [(ngModel)]="draft.reference" required pattern="[A-Za-z0-9-]{3,40}" placeholder="CUS-1004"><small>3–40 letters, digits, or hyphens</small></label>
+        <label>Email<input name="email" type="email" [(ngModel)]="draft.email" required email maxlength="200" placeholder="customer@example.test"></label>
+        <label>Currency<select name="currency" [(ngModel)]="draft.currency"><option>INR</option><option>SEK</option><option>EUR</option><option>USD</option></select></label>
+      </div><div class="form-footer"><button type="button" class="quiet" (click)="showNew.set(false)">Cancel</button><button class="primary" [disabled]="customerForm.invalid || creating()">{{ creating() ? 'Creating…' : 'Create customer' }}</button></div></form>
+    </section></div>
+  }
+}

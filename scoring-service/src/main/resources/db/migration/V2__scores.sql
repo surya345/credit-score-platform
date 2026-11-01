@@ -1,0 +1,3 @@
+CREATE TABLE credit_scores(id VARCHAR(255) PRIMARY KEY,source_event_id VARCHAR(255) NOT NULL UNIQUE,customer_id VARCHAR(255) NOT NULL,source_version BIGINT NOT NULL,calculated_at TIMESTAMP(6) NOT NULL,score INT NOT NULL,risk_band VARCHAR(255) NOT NULL,result_json LONGTEXT NOT NULL);
+CREATE UNIQUE INDEX uq_customer_version ON credit_scores(customer_id,source_version);
+ALTER TABLE credit_scores ADD CONSTRAINT ck_score CHECK(score BETWEEN 300 AND 850);

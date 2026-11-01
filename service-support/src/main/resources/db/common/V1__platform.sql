@@ -1,0 +1,3 @@
+CREATE TABLE audit_entries(id VARCHAR(36) PRIMARY KEY,actor_id VARCHAR(255) NOT NULL,action VARCHAR(255) NOT NULL,resource_id VARCHAR(255) NOT NULL,occurred_at TIMESTAMP(6) NOT NULL);
+CREATE TABLE outbox_entries(id VARCHAR(36) PRIMARY KEY,topic VARCHAR(255) NOT NULL,message_key VARCHAR(255) NOT NULL,payload LONGTEXT NOT NULL,created_at TIMESTAMP(6) NOT NULL,published_at TIMESTAMP(6),attempts INT NOT NULL DEFAULT 0);
+CREATE INDEX idx_outbox_pending ON outbox_entries(published_at,created_at);

@@ -1,0 +1,292 @@
+{
+  "name": "credit-score-platform",
+  "services": {
+    "mysql": {
+      "image": "mysql:8.4.11",
+      "environment": {
+        "MYSQL_ROOT_PASSWORD": "local-root-only"
+      },
+      "ports": [
+        "127.0.0.1:3306:3306"
+      ],
+      "volumes": [
+        "mysql-data:/var/lib/mysql",
+        "./infra/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "mysql --protocol=TCP -h127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD -e \"SELECT 1\" credit_identity"
+        ],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 40
+      }
+    },
+    "kafka": {
+      "build": "./infra/kafka",
+      "ports": [
+        "127.0.0.1:9092:9092"
+      ],
+      "volumes": [
+        "kafka-data:/var/lib/kafka"
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/opt/kafka/bin/kafka-topics.sh",
+          "--bootstrap-server",
+          "localhost:29092",
+          "--list"
+        ],
+        "interval": "10s",
+        "timeout": "10s",
+        "retries": 30,
+        "start_period": "20s"
+      },
+      "environment": {
+        "KAFKA_HEAP_OPTS": "-Xms256m -Xmx512m"
+      },
+      "mem_limit": "1g"
+    },
+    "redis": {
+      "image": "redis:8.2-alpine",
+      "ports": [
+        "127.0.0.1:6379:6379"
+      ],
+      "command": [
+        "redis-server",
+        "--appendonly",
+        "yes"
+      ],
+      "volumes": [
+        "redis-data:/data"
+      ]
+    },
+    "keycloak": {
+      "image": "quay.io/keycloak/keycloak:26.8.1",
+      "command": [
+        "start-dev",
+        "--import-realm"
+      ],
+      "environment": {
+        "KC_BOOTSTRAP_ADMIN_USERNAME": "admin",
+        "KC_BOOTSTRAP_ADMIN_PASSWORD": "KeycloakAdmin123!",
+        "KC_DB": "mysql",
+        "KC_DB_URL": "jdbc:mysql://mysql:3306/credit_identity",
+        "KC_DB_USERNAME": "credit_identity",
+        "KC_DB_PASSWORD": "local-dev-only",
+        "KC_HOSTNAME": "http://localhost:8180",
+        "KC_HEALTH_ENABLED": "true"
+      },
+      "ports": [
+        "127.0.0.1:8180:8080"
+      ],
+      "volumes": [
+        "./infra/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro"
+      ],
+      "depends_on": {
+        "mysql": {
+          "condition": "service_healthy"
+        }
+      },
+      "mem_limit": "768m"
+    },
+    "mailpit": {
+      "image": "axllent/mailpit:v1.27.8",
+      "ports": [
+        "127.0.0.1:8025:8025",
+        "127.0.0.1:1025:1025"
+      ]
+    },
+    "user-service": {
+      "build": {
+        "context": ".",
+        "dockerfile": "infra/java/Dockerfile",
+        "args": {
+          "SERVICE": "user-service"
+        }
+      },
+      "environment": {
+        "DB_PASSWORD": "local-dev-only",
+        "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+        "OIDC_ISSUER": "http://localhost:8180/realms/credit-platform",
+        "OIDC_JWKS": "http://keycloak:8080/realms/credit-platform/protocol/openid-connect/certs",
+        "USERS_URL": "http://user-service:8081",
+        "REDIS_HOST": "redis",
+        "MAIL_HOST": "mailpit",
+        "DB_URL": "jdbc:mysql://mysql:3306/credit_users?connectionTimeZone=UTC",
+        "DB_USER": "credit_users"
+      },
+      "ports": [
+        "127.0.0.1:8081:8081"
+      ],
+      "depends_on": {
+        "mysql": {
+          "condition": "service_healthy"
+        },
+        "kafka": {
+          "condition": "service_healthy"
+        },
+        "keycloak": {
+          "condition": "service_started"
+        }
+      },
+      "restart": "unless-stopped",
+      "mem_limit": "768m"
+    },
+    "data-service": {
+      "build": {
+        "context": ".",
+        "dockerfile": "infra/java/Dockerfile",
+        "args": {
+          "SERVICE": "data-service"
+        }
+      },
+      "environment": {
+        "DB_PASSWORD": "local-dev-only",
+        "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+        "OIDC_ISSUER": "http://localhost:8180/realms/credit-platform",
+        "OIDC_JWKS": "http://keycloak:8080/realms/credit-platform/protocol/openid-connect/certs",
+        "USERS_URL": "http://user-service:8081",
+        "REDIS_HOST": "redis",
+        "MAIL_HOST": "mailpit",
+        "DB_URL": "jdbc:mysql://mysql:3306/credit_data?connectionTimeZone=UTC",
+        "DB_USER": "credit_data"
+      },
+      "ports": [
+        "127.0.0.1:8082:8082"
+      ],
+      "depends_on": {
+        "mysql": {
+          "condition": "service_healthy"
+        },
+        "kafka": {
+          "condition": "service_healthy"
+        },
+        "keycloak": {
+          "condition": "service_started"
+        }
+      },
+      "restart": "unless-stopped",
+      "mem_limit": "768m"
+    },
+    "scoring-service": {
+      "build": {
+        "context": ".",
+        "dockerfile": "infra/java/Dockerfile",
+        "args": {
+          "SERVICE": "scoring-service"
+        }
+      },
+      "environment": {
+        "DB_PASSWORD": "local-dev-only",
+        "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+        "OIDC_ISSUER": "http://localhost:8180/realms/credit-platform",
+        "OIDC_JWKS": "http://keycloak:8080/realms/credit-platform/protocol/openid-connect/certs",
+        "USERS_URL": "http://user-service:8081",
+        "REDIS_HOST": "redis",
+        "MAIL_HOST": "mailpit",
+        "DB_URL": "jdbc:mysql://mysql:3306/credit_scores?connectionTimeZone=UTC",
+        "DB_USER": "credit_scores"
+      },
+      "ports": [
+        "127.0.0.1:8083:8083"
+      ],
+      "depends_on": {
+        "mysql": {
+          "condition": "service_healthy"
+        },
+        "kafka": {
+          "condition": "service_healthy"
+        },
+        "keycloak": {
+          "condition": "service_started"
+        }
+      },
+      "restart": "unless-stopped",
+      "mem_limit": "768m"
+    },
+    "report-service": {
+      "build": {
+        "context": ".",
+        "dockerfile": "infra/java/Dockerfile",
+        "args": {
+          "SERVICE": "report-service"
+        }
+      },
+      "environment": {
+        "DB_PASSWORD": "local-dev-only",
+        "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+        "OIDC_ISSUER": "http://localhost:8180/realms/credit-platform",
+        "OIDC_JWKS": "http://keycloak:8080/realms/credit-platform/protocol/openid-connect/certs",
+        "USERS_URL": "http://user-service:8081",
+        "REDIS_HOST": "redis",
+        "MAIL_HOST": "mailpit",
+        "DB_URL": "jdbc:mysql://mysql:3306/credit_reports?connectionTimeZone=UTC",
+        "DB_USER": "credit_reports"
+      },
+      "ports": [
+        "127.0.0.1:8084:8084"
+      ],
+      "depends_on": {
+        "mysql": {
+          "condition": "service_healthy"
+        },
+        "kafka": {
+          "condition": "service_healthy"
+        },
+        "keycloak": {
+          "condition": "service_started"
+        }
+      },
+      "restart": "unless-stopped",
+      "mem_limit": "768m"
+    },
+    "gateway": {
+      "build": {
+        "context": ".",
+        "dockerfile": "infra/java/Dockerfile",
+        "args": {
+          "SERVICE": "gateway"
+        }
+      },
+      "environment": {
+        "DB_PASSWORD": "local-dev-only",
+        "KAFKA_BOOTSTRAP_SERVERS": "kafka:29092",
+        "OIDC_ISSUER": "http://localhost:8180/realms/credit-platform",
+        "OIDC_JWKS": "http://keycloak:8080/realms/credit-platform/protocol/openid-connect/certs",
+        "USERS_URL": "http://user-service:8081",
+        "REDIS_HOST": "redis",
+        "MAIL_HOST": "mailpit",
+        "DATA_URL": "http://data-service:8082",
+        "SCORES_URL": "http://scoring-service:8083",
+        "REPORTS_URL": "http://report-service:8084"
+      },
+      "ports": [
+        "127.0.0.1:8080:8080"
+      ],
+      "depends_on": [
+        "user-service",
+        "data-service",
+        "scoring-service",
+        "report-service"
+      ],
+      "mem_limit": "512m"
+    },
+    "frontend": {
+      "build": "./frontend",
+      "ports": [
+        "127.0.0.1:4200:80"
+      ],
+      "depends_on": [
+        "gateway"
+      ]
+    }
+  },
+  "volumes": {
+    "mysql-data": {},
+    "kafka-data": {},
+    "redis-data": {}
+  }
+}

@@ -1,0 +1,2 @@
+CREATE TABLE financial_records(id BIGINT AUTO_INCREMENT PRIMARY KEY,event_id VARCHAR(255) NOT NULL UNIQUE,customer_id VARCHAR(255) NOT NULL,officer_id VARCHAR(255) NOT NULL,submitted_at TIMESTAMP(6) NOT NULL,input_json LONGTEXT NOT NULL);
+CREATE INDEX idx_financial_customer ON financial_records(customer_id,id);

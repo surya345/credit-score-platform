@@ -1,0 +1,15 @@
+CREATE DATABASE IF NOT EXISTS credit_users;
+CREATE USER IF NOT EXISTS 'credit_users'@'%' IDENTIFIED BY 'local-dev-only';
+GRANT ALL ON credit_users.* TO 'credit_users'@'%';
+CREATE DATABASE IF NOT EXISTS credit_data;
+CREATE USER IF NOT EXISTS 'credit_data'@'%' IDENTIFIED BY 'local-dev-only';
+GRANT ALL ON credit_data.* TO 'credit_data'@'%';
+CREATE DATABASE IF NOT EXISTS credit_scores;
+CREATE USER IF NOT EXISTS 'credit_scores'@'%' IDENTIFIED BY 'local-dev-only';
+GRANT ALL ON credit_scores.* TO 'credit_scores'@'%';
+CREATE DATABASE IF NOT EXISTS credit_reports;
+CREATE USER IF NOT EXISTS 'credit_reports'@'%' IDENTIFIED BY 'local-dev-only';
+GRANT ALL ON credit_reports.* TO 'credit_reports'@'%';
+CREATE DATABASE IF NOT EXISTS credit_identity;
+CREATE USER IF NOT EXISTS 'credit_identity'@'%' IDENTIFIED BY 'local-dev-only';
+GRANT ALL ON credit_identity.* TO 'credit_identity'@'%';

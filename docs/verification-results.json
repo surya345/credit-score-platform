@@ -1,0 +1,281 @@
+{
+  "verified_at": "2026-10-17T09:26:04Z",
+  "result": "BUILD SUCCESS",
+  "mode": "External dedicated native MySQL and Kafka; no Docker",
+  "environment": {
+    "java": "Zulu OpenJDK 25.0.4.1",
+    "maven": "3.9.16",
+    "mysql": "8.4.11",
+    "kafka_broker": "4.4.0",
+    "spring_boot": "4.1.1",
+    "application_processes": 8
+  },
+  "command": "mvn -B -ntp -Pintegration verify with it.mysql.url, it.mysql.user, it.mysql.password, and it.kafka.bootstrap (see INTEGRATION.md)",
+  "reactor_duration_seconds": 160,
+  "totals": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "dev.credit.data.FinancialApiTest",
+      "kind": "unit_or_api",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 6.262,
+      "cases": [
+        {
+          "name": "missingCustomerCannotCreateEvent",
+          "duration_seconds": 0.32,
+          "status": "passed"
+        },
+        {
+          "name": "zeroIncomeCannotCreateEvent",
+          "duration_seconds": 0.044,
+          "status": "passed"
+        },
+        {
+          "name": "retryCreatesOneRecordAndOneOutboxEntry",
+          "duration_seconds": 0.154,
+          "status": "passed"
+        },
+        {
+          "name": "reusedKeyWithChangedPayloadIsConflict",
+          "duration_seconds": 0.043,
+          "status": "passed"
+        },
+        {
+          "name": "fractionalPaymentCountIsRejected",
+          "duration_seconds": 0.026,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.gateway.GatewayContextTest",
+      "kind": "unit_or_api",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 3.558,
+      "cases": [
+        {
+          "name": "gatewayStartsAndRegistersAllRoutes",
+          "duration_seconds": 0.308,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.reports.ReportTest",
+      "kind": "unit_or_api",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 6.036,
+      "cases": [
+        {
+          "name": "pdfIncludesScoreModelAndDisclaimer",
+          "duration_seconds": 0.611,
+          "status": "passed"
+        },
+        {
+          "name": "duplicateDeliveryCreatesOneReport",
+          "duration_seconds": 0.041,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.scoring.ScoringEngineTest",
+      "kind": "unit_or_api",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 0.125,
+      "cases": [
+        {
+          "name": "moreDebtNeverImprovesScore",
+          "duration_seconds": 0.086,
+          "status": "passed"
+        },
+        {
+          "name": "weakestInputsStayAt300",
+          "duration_seconds": 0.006,
+          "status": "passed"
+        },
+        {
+          "name": "documentedExampleScores763",
+          "duration_seconds": 0.003,
+          "status": "passed"
+        },
+        {
+          "name": "strongestInputsReach850",
+          "duration_seconds": 0.002,
+          "status": "passed"
+        },
+        {
+          "name": "historyBenefitIsCapped",
+          "duration_seconds": 0.001,
+          "status": "passed"
+        },
+        {
+          "name": "missedPaymentsNeverImproveScore",
+          "duration_seconds": 0.003,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.scoring.ScoringPersistenceTest",
+      "kind": "unit_or_api",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 6.215,
+      "cases": [
+        {
+          "name": "duplicateDeliveryCreatesOneScoreAndOneEvent",
+          "duration_seconds": 0.396,
+          "status": "passed"
+        },
+        {
+          "name": "lateOlderEventCannotReplaceLatest",
+          "duration_seconds": 0.082,
+          "status": "passed"
+        },
+        {
+          "name": "unsupportedSchemaHasNoSideEffects",
+          "duration_seconds": 0.027,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.users.CustomerApiTest",
+      "kind": "unit_or_api",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 5.932,
+      "cases": [
+        {
+          "name": "unrelatedRoleIsForbidden",
+          "duration_seconds": 0.209,
+          "status": "passed"
+        },
+        {
+          "name": "anonymousIsUnauthorized",
+          "duration_seconds": 0.012,
+          "status": "passed"
+        },
+        {
+          "name": "officerCreatesAndFindsCustomer",
+          "duration_seconds": 0.29,
+          "status": "passed"
+        },
+        {
+          "name": "duplicateReferenceIsConflict",
+          "duration_seconds": 0.049,
+          "status": "passed"
+        },
+        {
+          "name": "invalidEmailIsRejected",
+          "duration_seconds": 0.026,
+          "status": "passed"
+        },
+        {
+          "name": "auditRequiresAdministrator",
+          "duration_seconds": 0.019,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "name": "dev.credit.integration.PlatformIT",
+      "kind": "integration",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": 122.407,
+      "cases": [
+        {
+          "name": "concurrentIdenticalSubmissionsPersistOneRecordOutboxAndAudit",
+          "duration_seconds": 3.574,
+          "status": "passed"
+        },
+        {
+          "name": "conflictingPayloadsCannotOverwriteTheWinningSubmission",
+          "duration_seconds": 1.079,
+          "status": "passed"
+        },
+        {
+          "name": "distinctSubmissionsSurviveCompetingOutboxPublishers",
+          "duration_seconds": 1.041,
+          "status": "passed"
+        },
+        {
+          "name": "duplicateKafkaEventsAcrossConsumersCreateOneScoreAndReport",
+          "duration_seconds": 2.663,
+          "status": "passed"
+        },
+        {
+          "name": "lateOlderEventCannotReplaceLatestScore",
+          "duration_seconds": 0.51,
+          "status": "passed"
+        },
+        {
+          "name": "killedConsumersProcessBacklogAfterRestart",
+          "duration_seconds": 59.542,
+          "status": "passed"
+        },
+        {
+          "name": "unpublishedOutboxSurvivesPublisherCrashAndRecovers",
+          "duration_seconds": 24.376,
+          "status": "passed"
+        },
+        {
+          "name": "invalidEventReachesDeadLetterTopicWithoutBlockingValidWork",
+          "duration_seconds": 4.246,
+          "status": "passed"
+        },
+        {
+          "name": "auditFailureRollsBackFinancialRecordAndOutboxTogether",
+          "duration_seconds": 0.645,
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "additional_checks": {
+    "python_verifier_compilation": "passed",
+    "compose_json_schema": "passed for normal and generated configurations",
+    "docker_missing_failure": "passed: verifier reports Docker unavailable"
+  },
+  "not_executed": [
+    "Docker image builds",
+    "Testcontainers infrastructure startup",
+    "Complete Compose runtime",
+    "Nginx runtime",
+    "Real Redis cache hits",
+    "Mailpit container delivery",
+    "Jenkins execution",
+    "Broker or database failover",
+    "Production load"
+  ],
+  "notes": [
+    "The 23 existing unit/API tests use H2 and Spring test JWT support as applicable.",
+    "The nine new integration tests use real MySQL/Kafka, production JARs, and a local signed-JWT/JWKS issuer.",
+    "This summary excludes JUnit system properties and captured logs."
+  ]
+}

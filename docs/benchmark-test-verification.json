@@ -1,0 +1,62 @@
+{
+  "benchmarkFinishedAtUtc": "2026-10-17T21:40:34.013962038Z",
+  "scope": "23 existing unit/API tests plus one opt-in benchmark test. Existing PlatformIT concurrency/recovery suite was not rerun.",
+  "tests": [
+    {
+      "name": "dev.credit.data.FinancialApiTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "9.637"
+    },
+    {
+      "name": "dev.credit.gateway.GatewayContextTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "4.082"
+    },
+    {
+      "name": "dev.credit.reports.ReportTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "8.422"
+    },
+    {
+      "name": "dev.credit.scoring.ScoringEngineTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.02"
+    },
+    {
+      "name": "dev.credit.scoring.ScoringPersistenceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.928"
+    },
+    {
+      "name": "dev.credit.users.CustomerApiTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.533"
+    },
+    {
+      "name": "dev.credit.integration.BenchmarkIT",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "155.571"
+    }
+  ]
+}
